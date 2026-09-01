@@ -26,6 +26,16 @@ def test_system():
     assert scaled_vector.shape == (1, 78)
     print("[✓] RobustScaler transformation test passed.")
     
+    # 4. Test PyQt5 Standalone GUI Window Creation (Offscreen)
+    os.environ["QT_QPA_PLATFORM"] = "offscreen"
+    from PyQt5.QtWidgets import QApplication
+    from desktop_app import NetShieldDesktopApp
+
+    app = QApplication.instance() or QApplication([])
+    window = NetShieldDesktopApp()
+    assert window.windowTitle().startswith("NetShield AI")
+    print("[✓] Standalone PyQt5 desktop GUI initialization test passed.")
+
     print("\nAll automated verification checks PASSED successfully!")
 
 if __name__ == "__main__":
