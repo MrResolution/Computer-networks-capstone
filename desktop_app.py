@@ -357,8 +357,7 @@ class NetShieldDesktopApp(QMainWindow):
         nav_items = [
             "1. Preset Attack Scenarios",
             "2. Live PCAP Inspection",
-            "3. Batch CSV Ingestion",
-            "4. Manual Flow Sandbox"
+            "3. Batch CSV Ingestion"
         ]
         for item in nav_items:
             self.nav_list.addItem(QListWidgetItem(item))
@@ -393,7 +392,6 @@ class NetShieldDesktopApp(QMainWindow):
         self._build_page1_preset()
         self._build_page2_pcap()
         self._build_page3_csv()
-        self._build_page4_sandbox()
 
         content_layout.addWidget(self.stacked_widget)
         main_layout.addWidget(content_widget, stretch=1)
@@ -715,92 +713,7 @@ class NetShieldDesktopApp(QMainWindow):
     def _on_csv_error(self, err_msg):
         QMessageBox.critical(self, "CSV Ingestion Error", f"Failed to process CSV file:\n{err_msg}")
 
-    # ----------------- Page 4: Manual Sandbox -----------------
-    def _build_page4_sandbox(self):
-        page = QWidget()
-        layout = QVBoxLayout(page)
 
-        controls_card = QFrame()
-        controls_card.setObjectName("Card")
-        grid = QGridLayout(controls_card)
-
-        # Controls
-        grid.addWidget(QLabel("Flow Duration (ms):"), 0, 0)
-        self.sb_dur = QDoubleSpinBox()
-        self.sb_dur.setRange(0.0, 10000.0)
-        self.sb_dur.setValue(250.0)
-        grid.addWidget(self.sb_dur, 0, 1)
-
-        grid.addWidget(QLabel("Total Packets Sent:"), 0, 2)
-        self.sb_pkts = QSpinBox()
-        self.sb_pkts.setRange(1, 1000000)
-        self.sb_pkts.setValue(100)
-        grid.addWidget(self.sb_pkts, 0, 3)
-
-        grid.addWidget(QLabel("Mean Packet Length (bytes):"), 1, 0)
-        self.sb_len = QDoubleSpinBox()
-        self.sb_len.setRange(0.0, 1500.0)
-        self.sb_len.setValue(512.0)
-        grid.addWidget(self.sb_len, 1, 1)
-
-        grid.addWidget(QLabel("SYN Flags Count:"), 1, 2)
-        self.sb_syn = QSpinBox()
-        self.sb_syn.setRange(0, 100000)
-        self.sb_syn.setValue(2)
-        grid.addWidget(self.sb_syn, 1, 3)
-
-        grid.addWidget(QLabel("Inter-Arrival Time (IAT Mean):"), 2, 0)
-        self.sb_iat = QDoubleSpinBox()
-        self.sb_iat.setRange(0.0, 1000.0)
-        self.sb_iat.setValue(1.2)
-        grid.addWidget(self.sb_iat, 2, 1)
-
-        grid.addWidget(QLabel("RST Flags Count:"), 2, 2)
-        self.sb_rst = QSpinBox()
-        self.sb_rst.setRange(0, 100000)
-        self.sb_rst.setValue(0)
-        grid.addWidget(self.sb_rst, 2, 3)
-
-        eval_btn = QPushButton("⚡ Evaluate Sandbox Parameters")
-        eval_btn.clicked.connect(self._evaluate_sandbox)
-        grid.addWidget(eval_btn, 3, 0, 1, 4)
-
-        layout.addWidget(controls_card)
-
-        # Verdict Cards
-        sb_metrics_layout = QHBoxLayout()
-        self.p4_m_class = self._create_metric_card("SANDBOX CLASSIFICATION", "---")
-        self.p4_m_conf = self._create_metric_card("CONFIDENCE RATING", "---")
-        self.p4_m_sev = self._create_metric_card("SEVERITY SCORE", "---")
-
-        sb_metrics_layout.addWidget(self.p4_m_class)
-        sb_metrics_layout.addWidget(self.p4_m_conf)
-        sb_metrics_layout.addWidget(self.p4_m_sev)
-        layout.addLayout(sb_metrics_layout)
-
-        self.p4_canvas = DarkMatplotlibCanvas(width=6, height=3)
-        layout.addWidget(self.p4_canvas, stretch=1)
-
-        self.stacked_widget.addWidget(page)
-        self._evaluate_sandbox()
-
-    def _evaluate_sandbox(self):
-        custom_v = np.zeros(NUM_FEATURES)
-        custom_v[0] = self.sb_dur.value()
-        custom_v[1] = self.sb_pkts.value()
-        custom_v[3] = self.sb_len.value()
-        custom_v[11] = self.sb_syn.value()
-        custom_v[7] = self.sb_iat.value()
-        custom_v[12] = self.sb_rst.value()
-
-        idx, probs = self.evaluate_vector(custom_v)
-        sev_label, sev_color = SEVERITY[idx]
-
-        self._update_metric_card(self.p4_m_class, "SANDBOX CLASSIFICATION", CLASSES[idx])
-        self._update_metric_card(self.p4_m_conf, "CONFIDENCE RATING", f"{probs[idx]*100:.2f}%")
-        self._update_metric_card(self.p4_m_sev, "SEVERITY SCORE", sev_label, color=sev_color)
-
-        self.p4_canvas.plot_bar_chart(CLASSES, probs, idx)
 
     # Helper UI Builders
     def _create_metric_card(self, title, val, color=None):
