@@ -2,3 +2,9 @@ venv/
 __pycache__/
 *.pyc
 .DS_Store
+
+# Agent & AI artifacts
+.agents/
+.gemini/
+skills-lock.json
+metadata.json
